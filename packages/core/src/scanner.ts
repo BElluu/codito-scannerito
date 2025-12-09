@@ -1,7 +1,8 @@
 import {
   BrowserMultiFormatReader,
   DecodeHintType,
-  BarcodeFormat as ZXingFormat
+  BarcodeFormat as ZXingFormat,
+  Result
 } from '@zxing/library';
 import type { 
   ScannerOptions, 
@@ -11,6 +12,11 @@ import type {
   ErrorCallback,
   BarcodeFormat
 } from './types';
+
+const ALL_FORMATS: BarcodeFormat[] = [
+  'QR_CODE', 'CODE_128', 'CODE_93', 'CODE_39', 'EAN_13', 'EAN_8',
+  'UPC_A', 'UPC_E', 'DATA_MATRIX', 'PDF_417', 'AZTEC', 'CODABAR', 'ITF'
+];
 
 export class BarcodeScanner {
   private reader: BrowserMultiFormatReader;
@@ -23,15 +29,10 @@ export class BarcodeScanner {
   private scanInterval: number | null = null;
 
   constructor(options: ScannerOptions = {}) {
-    const allFormats: BarcodeFormat[] = [
-      'QR_CODE', 'CODE_128', 'CODE_93', 'CODE_39', 'EAN_13', 'EAN_8',
-      'UPC_A', 'UPC_E', 'DATA_MATRIX', 'PDF_417', 'AZTEC', 'CODABAR', 'ITF'
-    ];
-    
     this.options = {
       fps: options.fps ?? 10,
       facingMode: options.facingMode ?? 'environment',
-      formats: options.formats ?? allFormats,
+      formats: options.formats ?? ALL_FORMATS,
       autoNormalize: options.autoNormalize ?? true,
       constraints: options.constraints ?? {}
     };
@@ -122,12 +123,9 @@ export class BarcodeScanner {
 
   private startScanLoop(onScan: ScanCallback, onError?: ErrorCallback): void {
     const scanIntervalMs = 1000 / this.options.fps;
-    let scanCount = 0;
     
     const scan = async () => {
       if (!this.isScanning || !this.videoElement) return;
-      
-      scanCount++;
       
       try {
         this.canvasContext.drawImage(
@@ -141,21 +139,8 @@ export class BarcodeScanner {
         const result = await this.reader.decodeFromImageUrl(dataUrl);
         
         if (result) {
-          const rawText = result.getText();
-          const normalizedText = this.options.autoNormalize 
-            ? this.normalizeBarcode(rawText)
-            : rawText;
-
-          const scanResult: ScanResult = {
-            text: normalizedText,
-            rawText: rawText,
-            format: ZXingFormat[result.getBarcodeFormat()],
-            timestamp: Date.now(),
-            wasNormalized: rawText !== normalizedText
-          };
-
-          onScan(scanResult);
-          return; // stop scanning when code is found
+          onScan(this.createScanResult(result));
+          return;
         }
       } catch (error) {}
       
@@ -196,19 +181,7 @@ export class BarcodeScanner {
         try {
           const dataUrl = e.target?.result as string;
           const result = await this.reader.decodeFromImageUrl(dataUrl);
-          
-          const rawText = result.getText();
-          const normalizedText = this.options.autoNormalize 
-            ? this.normalizeBarcode(rawText)
-            : rawText;
-
-          resolve({
-            text: normalizedText,
-            rawText: rawText,
-            format: ZXingFormat[result.getBarcodeFormat()],
-            timestamp: Date.now(),
-            wasNormalized: rawText !== normalizedText
-          });
+          resolve(this.createScanResult(result));
         } catch (error) {
           reject(error instanceof Error ? error : new Error('Failed to decode'));
         }
@@ -251,6 +224,21 @@ export class BarcodeScanner {
       .replace(/^\][A-Za-z0-9]{1,2}/, '') // AIM prefix
       .replace(/[\x00-\x1F\x7F]/g, '')     // Control chars
       .trim();
+  }
+
+  private createScanResult(result: Result): ScanResult {
+    const rawText = result.getText();
+    const normalizedText = this.options.autoNormalize 
+      ? this.normalizeBarcode(rawText)
+      : rawText;
+
+    return {
+      text: normalizedText,
+      rawText: rawText,
+      format: ZXingFormat[result.getBarcodeFormat()],
+      timestamp: Date.now(),
+      wasNormalized: rawText !== normalizedText
+    };
   }
 
   getIsScanning(): boolean {

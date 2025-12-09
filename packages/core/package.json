@@ -1,27 +1,52 @@
 {
   "name": "@coditoscannerito/core",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
-  "description": "",
+  "description": "Fast barcode and QR code scanning library for web applications",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "tsc --watch",
-    "build": "tsc"
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "barcode",
+    "qr-code",
+    "scanner",
+    "zxing",
+    "camera",
+    "code-128",
+    "ean-13",
+    "qr"
+  ],
+  "author": "Bartłomiej Komendarczuk <bkomendarczuk@gmail.com>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BElluu/codito-scannerito.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BElluu/codito-scannerito/issues"
+  },
+  "homepage": "https://github.com/BElluu/codito-scannerito#readme",
   "dependencies": {
     "@zxing/library": "^0.21.3"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }

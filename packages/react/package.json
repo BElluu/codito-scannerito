@@ -1,31 +1,52 @@
 {
   "name": "@coditoscannerito/react",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "type": "module",
-  "description": "",
+  "description": "React components for barcode and QR code scanning",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./styles.css": "./dist/styles.css"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc && npm run build:css",
     "build:css": "node -e \"require('fs').copyFileSync('src/styles.css', 'dist/styles.css')\"",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "barcode",
+    "qr-code",
+    "scanner",
+    "react",
+    "react-component",
+    "camera",
+    "zxing"
+  ],
+  "author": "Bartłomiej Komendarczuk <bkomendarczuk@gmail.com>",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BElluu/codito-scannerito.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BElluu/codito-scannerito/issues"
+  },
+  "homepage": "https://github.com/BElluu/codito-scannerito#readme",
   "peerDependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react": ">=17.0.0",
+    "react-dom": ">=17.0.0"
   },
   "dependencies": {
-    "@coditoscannerito/core": "file:../core"
+    "@coditoscannerito/core": "^1.0.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
@@ -33,5 +54,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }

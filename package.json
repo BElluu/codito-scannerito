@@ -1,27 +1,41 @@
 {
   "name": "coditoscannerito",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "private": true,
+  "description": "Fast barcode and QR code scanning library for web applications",
   "workspaces": [
     "packages/*",
     "examples/*"
   ],
-  "description": "",
-  "main": "index.js",
   "scripts": {
     "dev": "npm run dev -w @coditoscannerito/react-demo",
     "build": "npm run build -w @coditoscannerito/core && npm run build -w @coditoscannerito/react",
     "build:core": "npm run build -w @coditoscannerito/core",
-    "build:react": "npm run build -w @coditoscannerito/react",
-    "preview": "vite preview"
+    "build:react": "npm run build -w @coditoscannerito/react"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "barcode",
+    "qr-code",
+    "scanner",
+    "react",
+    "zxing"
+  ],
+  "author": "Bartłomiej Komendarczuk <bkomendarczuk@gmail.com>",
   "license": "Apache-2.0",
-  "type": "commonjs",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BElluu/codito-scannerito.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BElluu/codito-scannerito/issues"
+  },
+  "homepage": "https://github.com/BElluu/codito-scannerito#readme",
   "devDependencies": {
-    "@types/node": "^24.10.2",
+    "@types/node": "^22.0.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.7"
+    "vite": "^6.0.0"
+  },
+  "engines": {
+    "node": ">=16"
   }
 }
