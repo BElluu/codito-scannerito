@@ -28,6 +28,7 @@ export interface ScannerOptions {
   export type BarcodeFormat = 
     | 'QR_CODE'
     | 'CODE_128'
+    | 'CODE_93'
     | 'CODE_39'
     | 'EAN_13'
     | 'EAN_8'

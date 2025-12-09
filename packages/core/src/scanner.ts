@@ -23,15 +23,25 @@ export class BarcodeScanner {
   private scanInterval: number | null = null;
 
   constructor(options: ScannerOptions = {}) {
+    const allFormats: BarcodeFormat[] = [
+      'QR_CODE', 'CODE_128', 'CODE_93', 'CODE_39', 'EAN_13', 'EAN_8',
+      'UPC_A', 'UPC_E', 'DATA_MATRIX', 'PDF_417', 'AZTEC', 'CODABAR', 'ITF'
+    ];
+    
     this.options = {
       fps: options.fps ?? 10,
       facingMode: options.facingMode ?? 'environment',
-      formats: options.formats ?? ['QR_CODE', 'CODE_128', 'EAN_13'],
+      formats: options.formats ?? allFormats,
       autoNormalize: options.autoNormalize ?? true,
       constraints: options.constraints ?? {}
     };
+    
     const hints = new Map();
     hints.set(DecodeHintType.TRY_HARDER, true);
+    
+    const zxingFormats = this.options.formats.map(f => this.mapFormatToZXing(f));
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, zxingFormats);
+    
     this.reader = new BrowserMultiFormatReader(hints);
     
     this.canvas = document.createElement('canvas');
@@ -44,6 +54,7 @@ export class BarcodeScanner {
     const mapping: Record<BarcodeFormat, ZXingFormat> = {
       'QR_CODE': ZXingFormat.QR_CODE,
       'CODE_128': ZXingFormat.CODE_128,
+      'CODE_93': ZXingFormat.CODE_93,
       'CODE_39': ZXingFormat.CODE_39,
       'EAN_13': ZXingFormat.EAN_13,
       'EAN_8': ZXingFormat.EAN_8,

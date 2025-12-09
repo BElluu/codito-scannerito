@@ -1,94 +1,145 @@
-import React, { useState } from 'react'
+import { useState, useRef } from 'react'
 import { BarcodeScanner } from '@coditoscannerito/react'
+import { BarcodeScanner as CoreScanner } from '@coditoscannerito/core'
+import '@coditoscannerito/react/styles.css'
 import type { ScanResult } from '@coditoscannerito/core'
 
 function App() {
-  const [scannedCode, setScannedCode] = useState<string>('')
-  const [isScanning, setIsScanning] = useState(false)
+  const [showScanner, setShowScanner] = useState(false)
+  const [lastResult, setLastResult] = useState<ScanResult | null>(null)
+  const [isLoadingFile, setIsLoadingFile] = useState(false)
   const [error, setError] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const scannerRef = useRef<CoreScanner | null>(null)
+
+  if (!scannerRef.current) {
+    scannerRef.current = new CoreScanner()
+  }
 
   const handleScan = (result: ScanResult) => {
-    console.log('Scanned code:', result)
-    setScannedCode(result.text)
-    setIsScanning(false)
+    console.log('Scanned:', result)
+    setLastResult(result)
     setError('')
+    setShowScanner(false)
   }
 
-  const handleError = (error: Error) => {
-    console.error('Scanner error:', error)
-    setError(error.message)
-    setIsScanning(false)
+  const handleError = (err: Error) => {
+    console.error('Scanner error:', err)
+    setError(err.message)
   }
 
-  const handleClose = () => {
-    setIsScanning(false)
+  const handleFileClick = () => {
+    fileInputRef.current?.click()
   }
 
-  const handleStart = () => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsLoadingFile(true)
     setError('')
-    setScannedCode('')
-    setIsScanning(true)
+
+    try {
+      const result = await scannerRef.current!.scanImage(file)
+      setLastResult(result)
+    } catch (err) {
+      setError('No barcode found in image')
+    } finally {
+      setIsLoadingFile(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+    }
   }
 
   return (
     <div className="app">
       <header>
-        <h1>Coditoscannerito Demo</h1>
-        <p>Barcode scanner in React</p>
+        <h1>Codito Scannerito</h1>
+        <p>Barcode & QR Code Scanner</p>
       </header>
 
       <main>
-        <div className="start-section" style={{ display: isScanning ? 'none' : 'flex' }}>
-          <button 
-            onClick={handleStart}
-            className="start-button"
-          >
-            Start scanner
-          </button>
-          
-          {error && (
-            <div className="error">
-              <h2>Error:</h2>
-              <p className="error-message">{error}</p>
+        {!showScanner ? (
+          <div className="start-section">
+            <div className="buttons-row">
               <button 
-                onClick={() => setError('')}
-                className="dismiss-button"
+                className="primary-btn"
+                onClick={() => setShowScanner(true)}
               >
-                OK
+                📷 Open Scanner
+              </button>
+              
+              <button 
+                className="secondary-btn"
+                onClick={handleFileClick}
+                disabled={isLoadingFile}
+              >
+                {isLoadingFile ? '⏳ Processing...' : '📁 Scan from File'}
               </button>
             </div>
-          )}
-          
-          {scannedCode && (
-            <div className="result">
-              <h2>Scanned code:</h2>
-              <p className="code">{scannedCode}</p>
-            </div>
-          )}
-        </div>
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
 
-        <div className="scanner-section" style={{ display: isScanning ? 'flex' : 'none' }}>
-          <div className="scanner-wrapper">
+            {error && (
+              <div className="error-box">
+                <p>{error}</p>
+                <button onClick={() => setError('')}>OK</button>
+              </div>
+            )}
+
+            {lastResult && (
+              <div className="result-details">
+                <h3>✅ Last Scan</h3>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td>Text:</td>
+                      <td><code>{lastResult.text}</code></td>
+                    </tr>
+                    <tr>
+                      <td>Format:</td>
+                      <td>{lastResult.format}</td>
+                    </tr>
+                    <tr>
+                      <td>Raw Text:</td>
+                      <td><code>{lastResult.rawText}</code></td>
+                    </tr>
+                    <tr>
+                      <td>Normalized:</td>
+                      <td>{lastResult.wasNormalized ? 'Yes' : 'No'}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="scanner-section">
             <BarcodeScanner
               onScan={handleScan}
               onError={handleError}
-              showControls={false}
-              autoStart={isScanning}
+              showFileInput={false}
+              showOverlay={true}
+              showControls={true}
+              showLastResult={false}
+              playSound={true}
+              autoStart={true}
             />
-            <div className="debug-overlay">
-              <div>Scanning active...</div>
-              <div style={{ fontSize: '0.8rem', marginTop: '5px', opacity: 0.8 }}>
-                Point camera to barcode
-              </div>
-            </div>
             <button 
-              onClick={handleClose}
-              className="close-scanner-button"
+              className="close-btn"
+              onClick={() => setShowScanner(false)}
             >
-              Close scanner
+              ✕ Close Scanner
             </button>
           </div>
-        </div>
+        )}
       </main>
     </div>
   )

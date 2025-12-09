@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useBarcodeScanner, UsBarcodeScannerOptions } from './useBarcodeScanner';
 import type { ScanResult } from '@coditoscannerito/core';
 
@@ -47,6 +47,21 @@ export interface BarcodeScannerProps extends UsBarcodeScannerOptions {
    * Sound when scanning
    */
   playSound?: boolean;
+  
+  /**
+   * Show file input button to scan from image
+   */
+  showFileInput?: boolean;
+  
+  /**
+   * Text on file input button
+   */
+  fileInputText?: string;
+  
+  /**
+   * Show camera select dropdown (when multiple cameras available)
+   */
+  showCameraSelect?: boolean;
 }
 
 export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
@@ -59,15 +74,19 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
   className = '',
   showLastResult = true,
   playSound = true,
+  showFileInput = false,
+  fileInputText = 'Scan from File',
+  showCameraSelect = true,
   onScan,
   ...scannerOptions
 }) => {
   const [scannedCode, setScannedCode] = useState<string>('');
+  const [isLoadingFile, setIsLoadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleScan = (result: ScanResult) => {
     setScannedCode(result.text);
     
-    // Play sound
     if (playSound) {
       const beep = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
       beep.play().catch(() => {});
@@ -85,11 +104,32 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     selectedCamera,
     startScanning,
     stopScanning,
-    switchCamera
+    switchCamera,
+    scanFile
   } = useBarcodeScanner({
     ...scannerOptions,
     onScan: handleScan
   });
+
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsLoadingFile(true);
+    try {
+      await scanFile(file);
+    } catch (err) {
+    } finally {
+      setIsLoadingFile(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   return (
     <div className={`barcode-scanner ${className}`}>
@@ -130,7 +170,26 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
               {isScanning ? stopButtonText : startButtonText}
             </button>
 
-            {cameras.length > 1 && (
+            {showFileInput && (
+              <>
+                <button
+                  className="barcode-scanner__button barcode-scanner__button--file"
+                  onClick={handleFileSelect}
+                  disabled={isLoadingFile}
+                >
+                  {isLoadingFile ? 'Loading...' : fileInputText}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </>
+            )}
+
+            {showCameraSelect && cameras.length > 1 && (
               <select
                 className="barcode-scanner__camera-select"
                 value={selectedCamera || ''}
