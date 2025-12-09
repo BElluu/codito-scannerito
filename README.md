@@ -325,6 +325,11 @@ Or override CSS classes:
 
 ---
 
+## Credits
+To decode barcode and QR code we use `Zxing-js` https://github.com/zxing-js/library
+
+---
+
 ## 📄 License
 
 Apache-2.0
