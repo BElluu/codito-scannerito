@@ -1,0 +1,27 @@
+{
+  "name": "coditoscannerito",
+  "version": "0.0.1",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "examples/*"
+  ],
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "npm run dev -w @coditoscannerito/react-demo",
+    "build": "npm run build -w @coditoscannerito/core && npm run build -w @coditoscannerito/react",
+    "build:core": "npm run build -w @coditoscannerito/core",
+    "build:react": "npm run build -w @coditoscannerito/react",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/node": "^24.10.2",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7"
+  }
+}
