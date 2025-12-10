@@ -18,9 +18,11 @@ const ALL_FORMATS: BarcodeFormat[] = [
   'UPC_A', 'UPC_E', 'DATA_MATRIX', 'PDF_417', 'AZTEC', 'CODABAR', 'ITF'
 ];
 
+type ResolvedScannerOptions = Required<Omit<ScannerOptions, 'targetBoxWidth' | 'targetBoxHeight'>> & Pick<ScannerOptions, 'targetBoxWidth' | 'targetBoxHeight'>;
+
 export class BarcodeScanner {
   private reader: BrowserMultiFormatReader;
-  private options: Required<ScannerOptions>;
+  private options: ResolvedScannerOptions;
   private isScanning = false;
   private videoElement: HTMLVideoElement | null = null;
   private stream: MediaStream | null = null;
@@ -34,7 +36,9 @@ export class BarcodeScanner {
       facingMode: options.facingMode ?? 'environment',
       formats: options.formats ?? ALL_FORMATS,
       autoNormalize: options.autoNormalize ?? true,
-      constraints: options.constraints ?? {}
+      constraints: options.constraints ?? {},
+      targetBoxWidth: options.targetBoxWidth,
+      targetBoxHeight: options.targetBoxHeight
     };
     
     const hints = new Map();
@@ -100,12 +104,19 @@ export class BarcodeScanner {
       await new Promise<void>((resolve, reject) => {
         const timeout = setTimeout(() => reject(new Error('Video timeout')), 10000);
         
-        videoElement.onloadedmetadata = () => {
+        const handleReady = () => {
           clearTimeout(timeout);
+          videoElement.removeEventListener('loadedmetadata', handleReady);
           videoElement.play()
             .then(() => resolve())
             .catch(reject);
         };
+        
+        if (videoElement.readyState >= HTMLMediaElement.HAVE_METADATA) {
+          handleReady();
+        } else {
+          videoElement.addEventListener('loadedmetadata', handleReady);
+        }
       });
 
       this.canvas.width = videoElement.videoWidth;
@@ -128,14 +139,41 @@ export class BarcodeScanner {
       if (!this.isScanning || !this.videoElement) return;
       
       try {
-        this.canvasContext.drawImage(
-          this.videoElement, 
-          0, 0, 
-          this.canvas.width, 
-          this.canvas.height
-        );
+        let dataUrl: string;
         
-        const dataUrl = this.canvas.toDataURL('image/png');
+        if (this.options.targetBoxWidth && this.options.targetBoxHeight) {
+          const videoWidth = this.videoElement.videoWidth;
+          const videoHeight = this.videoElement.videoHeight;
+          
+          const regionWidth = (this.options.targetBoxWidth / 100) * videoWidth;
+          const regionHeight = (this.options.targetBoxHeight / 100) * videoHeight;
+          const regionX = (videoWidth - regionWidth) / 2;
+          const regionY = (videoHeight - regionHeight) / 2;
+          
+          this.canvas.width = regionWidth;
+          this.canvas.height = regionHeight;
+          
+          this.canvasContext.drawImage(
+            this.videoElement,
+            regionX, regionY, regionWidth, regionHeight,
+            0, 0, regionWidth, regionHeight
+          );
+          
+          dataUrl = this.canvas.toDataURL('image/png');
+        } else {
+          this.canvas.width = this.videoElement.videoWidth;
+          this.canvas.height = this.videoElement.videoHeight;
+          
+          this.canvasContext.drawImage(
+            this.videoElement, 
+            0, 0, 
+            this.canvas.width, 
+            this.canvas.height
+          );
+          
+          dataUrl = this.canvas.toDataURL('image/png');
+        }
+        
         const result = await this.reader.decodeFromImageUrl(dataUrl);
         
         if (result) {
@@ -245,7 +283,7 @@ export class BarcodeScanner {
     return this.isScanning;
   }
 
-  getOptions(): Readonly<Required<ScannerOptions>> {
+  getOptions(): Readonly<ResolvedScannerOptions> {
     return { ...this.options };
   }
 }

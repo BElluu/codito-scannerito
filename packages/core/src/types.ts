@@ -23,6 +23,16 @@ export interface ScannerOptions {
      * Image quality (higher = more accurate, but slower)
      */
     constraints?: MediaTrackConstraints;
+    
+    /**
+     * Width of scan region in percentage (0-100). Limits scanning to center region.
+     */
+    targetBoxWidth?: number;
+    
+    /**
+     * Height of scan region in percentage (0-100). Limits scanning to center region.
+     */
+    targetBoxHeight?: number;
   }
   
   export type BarcodeFormat = 

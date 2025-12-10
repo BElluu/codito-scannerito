@@ -108,6 +108,8 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({
     scanFile
   } = useBarcodeScanner({
     ...scannerOptions,
+    targetBoxWidth,
+    targetBoxHeight,
     onScan: handleScan
   });
 
