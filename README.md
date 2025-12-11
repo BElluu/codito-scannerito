@@ -2,6 +2,8 @@
 
 Fast and simple barcode/QR code scanning library for web applications.
 
+You can try on our DEMO: https://scanner.devopsowy.pl/
+
 ## 📦 Installation
 
 ```bash
